@@ -31,20 +31,28 @@ def _make_test_function(application, file_details):
             unit = unit.entity_id
             result = model.run_on_unit(
                 unit, 'stat -c "%U %G %a" {}'.format(file_details['path']))
-            ownership = result['Stdout']
-            owner, group, mode = ownership.split()
-            self.assertEqual(expected_owner,
-                             owner,
-                             "Owner is incorrect for {}: {}"
-                             .format(unit, owner))
-            self.assertEqual(expected_group,
-                             group,
-                             "Group is incorrect for {}: {}"
-                             .format(unit, group))
-            self.assertEqual(expected_mode,
-                             mode,
-                             "Mode is incorrect for {}: {}"
-                             .format(unit, mode))
+
+            code = int(result['Code'])
+            if code == 1:
+                if file_details.get('optional', True):
+                    self.skipTest("Optional file not present")
+                else:
+                    self.assertTrue(False, 'A required file is not present')
+            else:
+                ownership = result['Stdout']
+                owner, group, mode = ownership.split()
+                self.assertEqual(expected_owner,
+                                 owner,
+                                 "Owner is incorrect for {}: {}"
+                                 .format(unit, owner))
+                self.assertEqual(expected_group,
+                                 group,
+                                 "Group is incorrect for {}: {}"
+                                 .format(unit, group))
+                self.assertEqual(expected_mode,
+                                 mode,
+                                 "Mode is incorrect for {}: {}"
+                                 .format(unit, mode))
     return test
 
 
